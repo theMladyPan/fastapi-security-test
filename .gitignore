@@ -1,4 +1,5 @@
 .env
+.auth0.env
 .history
 **__pycache__**
 **.pyc

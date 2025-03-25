@@ -1,10 +1,10 @@
-from typing import Optional  # 👈 new imports
+from typing import Optional
 
-import jwt  # 👈 new imports
-from fastapi import Depends, HTTPException, status  # 👈 new imports
-from fastapi.security import SecurityScopes, HTTPAuthorizationCredentials, HTTPBearer  # 👈 new imports
+import jwt
+from fastapi import Depends, HTTPException, status
+from fastapi.security import SecurityScopes, HTTPAuthorizationCredentials, HTTPBearer
 
-from app.config import get_settings  # 👈 new imports
+from app.config import get_settings
 
 
 class UnauthorizedException(HTTPException):
@@ -54,4 +54,20 @@ class VerifyToken:
         except Exception as error:
             raise UnauthorizedException(str(error))
 
+        if len(security_scopes.scopes) > 0:
+            self._check_claims(payload, "scope", security_scopes.scopes)
+
         return payload
+
+    def _check_claims(self, payload, claim_name, expected_value):
+        if claim_name not in payload:
+            raise UnauthorizedException(detail=f'No claim "{claim_name}" found in token')
+
+        payload_claim = payload[claim_name]
+
+        if claim_name == "scope":
+            payload_claim = payload[claim_name].split(" ")
+
+        for value in expected_value:
+            if value not in payload_claim:
+                raise UnauthorizedException(detail=f'Missing "{claim_name}" scope')
